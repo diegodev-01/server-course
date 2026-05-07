@@ -110,10 +110,6 @@ sudo nano /etc/apache2/sites-available/misitio.conf
 # 4. Restart Apache to apply changes
 sudo systemctl restart apache2
 # Now Apache only responds on: curl localhost:8080
-
-## Class 4: Firewalls and rules
-## Class 5: Https & ssl
-## Class 6: Optimization & Logs
 ```
 
 ### Setting up Nginx as the Doorman
@@ -151,3 +147,42 @@ If you run curl misitio.local (port 80), Nginx will respond, but the content you
 
 > Note You can watch both logs at the same time to see how the request "passes through":
 tail -f /var/log/nginx/access.log /var/log/apache2/access.log
+
+## Class 4: Firewalls and rules
+Day 4: Today you will to know how to use the firewall with ufw & iptables
+
+### Concepts:
+- Firewall: the guardian of the system with a whitelist and rules
+### Tools
+- iptables
+- ufw
+
+### Lets do it
+```bash
+#first lets install iptables & ufw
+sudo apt install ufw iptables -y
+
+#then allow to use across ssh(important xd)
+sudo ufw allow ssh
+
+#finallly enable the firewall
+sudo ufw enable
+```
+
+### Challenge
+Suppose you have nginx on port 80 and apache on 8080, but only nginx need to be exposed, what port do we have to open?
+
+```bash
+sudo ufw allow 80/tcp #to open the port
+
+#verify the status
+sudo ufw status numbered
+
+#if you need to deny an specific IP 
+sudo ufw deny from 192.168.1.50 #to block any connection
+
+sudo ufw deny from 192.168.1.50 to any port 80
+
+```
+## Class 5: Https & ssl
+## Class 6: Optimization & Logs
