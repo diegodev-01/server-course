@@ -84,7 +84,70 @@ sudo nano /etc/hosts
 
 then you can add this line
 127.0.0.1	misitio.local
-## Class 3: Nginx
+## Class 3: Nginx & proxy reverse
+Third class, Nginx as the Doorman (Reverse Proxy)
+
+Today we learned that Nginx is extremely fast and is widely used as a "doorman." Today's experiment is to put Nginx at the entrance (port 80) and have it pass the ball to Apache, which will be hidden on port 8080.
+
+### Concepts
+- **Nginx:** A very lightweight and powerful web server.
+- **Reverse Proxy (Doorman):** When a server receives a request and forwards it to another internal server.
+- **Ports:** Two programs cannot use the same port. If Nginx uses port 80, Apache must move.
+
+### Commands of the day:
+```bash
+# 1. Install Nginx
+sudo apt install nginx -y
+
+# 2. Move Apache to port 8080 (The house move)
+sudo nano /etc/apache2/ports.conf
+# Change "Listen 80" to "Listen 8080"
+
+# 3. Update Apache's Virtual Host
+sudo nano /etc/apache2/sites-available/misitio.conf
+# Change <VirtualHost *:80> to <VirtualHost *:8080>
+
+# 4. Restart Apache to apply changes
+sudo systemctl restart apache2
+# Now Apache only responds on: curl localhost:8080
+
 ## Class 4: Firewalls and rules
 ## Class 5: Https & ssl
 ## Class 6: Optimization & Logs
+```
+
+### Setting up Nginx as the Doorman
+Now we configure Nginx to listen on port 80 and send everything to 8080
+Create the file in /etc/nginx/sites-available/doorman
+
+```Bash
+server {
+    listen 80;
+    server_name misitio.local;
+
+    location / {
+        proxy_pass [http://127.0.0.1:8080](http://127.0.0.1:8080);
+        proxy_set_header Host $host;
+    }
+}
+```
+Enable the configuration:
+
+```Bash
+# Create a symbolic link (shortcut)
+sudo ln -s /etc/nginx/sites-available/doorman /etc/nginx/sites-enabled/
+
+# Delete the default Nginx config so it doesn't clash
+sudo rm /etc/nginx/sites-enabled/default
+
+# Test for any syntax errors
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+Final Test:
+If you run curl misitio.local (port 80), Nginx will respond, but the content you see is what Apache is serving from port 8080.
+
+> Note You can watch both logs at the same time to see how the request "passes through":
+tail -f /var/log/nginx/access.log /var/log/apache2/access.log
